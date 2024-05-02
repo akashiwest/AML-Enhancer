@@ -1,5 +1,5 @@
-## 为Windows端网页版apple music提供歌词翻译，数据来源为网易云平台。
-
+## 为Windows端网页版apple music提供歌词翻译的油猴脚本，数据来源为网易云平台。
+在 [greasyfork]([https://markdown.com.cn](https://greasyfork.org/zh-CN/scripts/493948-apple-music-%E6%AD%8C%E8%AF%8D%E5%A2%9E%E5%BC%BA)) 安装
 
 ### 功能：
 在网页版Apple Music中可以获取原歌词与翻译歌词，根据播放时间自动选择合适的歌词，显示在页面中一个可以随处拖动的高斯模糊容器中。
