@@ -1,4 +1,4 @@
-## 为Windows端网页版 Apple Music 提供歌词翻译的油猴脚本，数据来源为网易云平台。
+## 为 Windows 端网页版 Apple Music 提供歌词翻译的油猴脚本，数据来源为网易云平台。
 在 [greasyfork](https://greasyfork.org/zh-CN/scripts/493948-apple-music-%E6%AD%8C%E8%AF%8D%E5%A2%9E%E5%BC%BA) 安装
 
 ### 功能：
