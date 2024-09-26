@@ -4,7 +4,7 @@
 // @version    1.04
 // @description  为Windows端网页版apple music提供歌词翻译，数据来源为网易云平台
 // @author     Akashi
-// @match      https://beta.music.apple.com/*
+// @match      https://*.music.apple.com/*
 // @grant      GM_xmlhttpRequest
 // ==/UserScript==
 
