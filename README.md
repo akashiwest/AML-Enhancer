@@ -1,4 +1,4 @@
-![示例图片](https://mono.imakashi.eu.org/opensource/github-amlenhancer1.webp "View")
+![示例图片](https://mono.imakashi.eu.org/opensource/github-amlenhancer1.1.webp "View")
 ## 为 Windows 端网页版 Apple Music 提供歌词翻译，数据来源为网易云平台。
 在 [greasyfork](https://greasyfork.org/zh-CN/scripts/493948-apple-music-%E6%AD%8C%E8%AF%8D%E5%A2%9E%E5%BC%BA) 安装
 
