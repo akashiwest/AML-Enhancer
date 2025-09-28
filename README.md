@@ -3,6 +3,8 @@
 在 [greasyfork](https://greasyfork.org/zh-CN/scripts/493948-apple-music-%E6%AD%8C%E8%AF%8D%E5%A2%9E%E5%BC%BA) 安装
 
 ***
+### 更新记录
+v1.2 支持微调并存储每首歌曲的歌词偏移时间
 
 ### 安装方法
 1. 点击安装，然后打开 music.apple.com，随便点击一首歌（不是纯音乐）播放；
