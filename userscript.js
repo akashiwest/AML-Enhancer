@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name Apple Music 歌词增强
 // @namespace https://github.com/akashiwest/AML-Enhancer
-// @version 1.200
+// @version 1.201
 // @description 为网页版 Apple Music 提供翻译歌词，数据来源为网易云音乐。
 // @author Akashi
 // @license GNU GPL 3.0
