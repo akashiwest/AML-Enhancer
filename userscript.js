@@ -523,6 +523,7 @@
             transDiv.style.fontSize = '20px';
             transDiv.style.color = '#888';
             transDiv.style.marginTop = '5px';
+            transDiv.lang = "zh-CN";
 
             groupDiv.appendChild(mainDiv);
             groupDiv.appendChild(transDiv);
