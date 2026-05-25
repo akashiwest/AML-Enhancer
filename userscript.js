@@ -26,10 +26,6 @@
     // 当前歌曲信息
     let currentSongTitle = '';
 
-    // 偏移存储对象 - 在实际环境中可以改为localStorage
-    // 格式: { "歌名": 偏移值(秒) }
-    let offsetStorage = {};
-
     // 存储/读取偏移值的函数
     function saveOffset(songTitle, offset) {
         if (!songTitle) return;
