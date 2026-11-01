@@ -1,9 +1,20 @@
-![示例图片](https://mono.imakashi.eu.org/opensource/github-amlenhancer1.1.webp "View")
+![示例图片](https://mono.imakashi.com/mono/opensource/github-amlenhancer1.300.webp "View")
 ## 为 Windows 端网页版 Apple Music 提供歌词翻译，数据来源为网易云平台。
 在 [greasyfork](https://greasyfork.org/zh-CN/scripts/493948-apple-music-%E6%AD%8C%E8%AF%8D%E5%A2%9E%E5%BC%BA) 安装
 
 ***
 ### 更新记录
+v1.3
+1. 支持随设备切换深色模式；
+2. 若歌词匹配错误或未找到歌词，现在可以手动查找并保存选择；
+3. 若歌曲歌词未翻译，现在可以调用浏览器自动翻译并保存；
+
+（注：翻译功能是本机浏览器自带的 Translator API，它的翻译模型在设备本地运行，仅限 Chrome 与 Edge 浏览器）
+
+4. 听歌统计与一些设置。
+
+<hr>
+
 v1.2 支持微调并存储每首歌曲的歌词偏移时间
 
 ### 安装方法
