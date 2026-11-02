@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Apple Music 歌词增强
 // @namespace    https://github.com/akashiwest/AML-Enhancer
-// @version      1.300
+// @version      1.310
 // @description  为网页版 Apple Music 提供翻译歌词，数据来源为网易云音乐
 // @author       Akashi
 // @license      GNU GPL 3.0
@@ -22,7 +22,7 @@
     /* ==================================================================
      * 常量
      * ================================================================== */
-    const VERSION = '1.3.0';
+    const VERSION = '1.3.1';
     const ABOUT_URL = 'https://imakashi.com/blog/archives/AML_Enhancer.html';
     const PLAYER_ID = 'apple-music-player';
 
@@ -34,6 +34,7 @@
     const KEY_MATCHES = 'aml_matches';
     const KEY_STATS = 'aml_stats';
     const KEY_TCACHE = 'aml_tcache';        // 机器翻译缓存
+    const KEY_INSTR = 'aml_instrumental';  // 标记为纯音乐的歌曲
 
     const MATCH_LIMIT_STEPS = [0, 20, 50, 100, 200, 500, 1000];
     const FONT_SCALE_MIN = 70;
@@ -126,6 +127,17 @@
         }
     }
 
+    // ---- 纯音乐标记（标题 -> 标记时间） ----
+    function isInstrumentalTitle(title) {
+        return !!title && title in store.get(KEY_INSTR, {});
+    }
+    function saveInstrumental(title, on) {
+        if (!title) return;
+        const all = store.get(KEY_INSTR, {});
+        if (on) all[title] = { t: Date.now() }; else delete all[title];
+        store.set(KEY_INSTR, all);
+    }
+
     /* ==================================================================
      * 听歌统计（按天累计实际播放秒数）
      * ================================================================== */
@@ -189,27 +201,23 @@
     }
     function getStatsSummary() {
         const stats = mergePending(readStats());
-        const now = new Date();
-        const today = dayKey(now);
-        const weekStart = dayKey(startOfWeek(now));
-        let week = 0, todaySec = 0;
+        const weekStart = dayKey(startOfWeek(new Date()));
+        let week = 0;
         const artists = {};
         for (const [k, d] of Object.entries(stats.days)) {
-            if (k >= weekStart) {
-                week += d.s || 0;
-                for (const [t, sec] of Object.entries(d.songs || {})) {
-                    const artist = artistOf(t);
-                    if (artist) artists[artist] = (artists[artist] || 0) + sec;
-                }
+            if (k < weekStart) continue;
+            week += d.s || 0;
+            for (const [t, sec] of Object.entries(d.songs || {})) {
+                const artist = artistOf(t);
+                if (artist) artists[artist] = (artists[artist] || 0) + sec;
             }
-            if (k === today) todaySec = d.s || 0;
         }
         let top = '';
         let topSec = 0;
         for (const [name, sec] of Object.entries(artists)) {
             if (sec > topSec) { top = name; topSec = sec; }
         }
-        return { week, today: todaySec, top };
+        return { week, top };
     }
     function fmtDuration(sec) {
         const m = Math.round(sec / 60);
@@ -240,6 +248,7 @@
     let translatorInfo = null;         // 当前这首歌的翻译检测结果，用于在菜单里显示
     let lineLangs = [];                // 每一行歌词的语言（null = 不需要翻译）
     let machinePending = [];           // 还没翻译的语言（语言包没下载 / 创建失败）
+    let isInstrumental = false;        // 当前歌曲被标记为纯音乐
 
     /* ==================================================================
      * 样式
@@ -337,6 +346,8 @@
         font-weight: 600;
         color: var(--aml-fg);
     }
+
+    .aml-msg-btns { display: flex; gap: 6px; }
 
     .aml-msg-sub {
         font-size: calc(14px * var(--aml-scale, 1));
@@ -565,10 +576,6 @@
             class: 'aml-btn', text: '设置', title: '设置',
             onclick: e => { e.stopPropagation(); toggleMenu(); }
         });
-        const searchBtn = h('button', {
-            class: 'aml-btn', text: '重新搜索', title: '歌词不对或没找到？手动搜索并选择',
-            onclick: e => { e.stopPropagation(); toggleSearch(); }
-        });
         const tipBtn = h('button', { class: 'aml-btn', text: '' });
         tipBtn.style.display = 'none';
         const minusBtn = h('button', {
@@ -594,13 +601,13 @@
         });
 
         const bar = h('div', { class: 'aml-bar' },
-            h('div', { class: 'aml-bar-group' }, settingsBtn, searchBtn, tipBtn),
+            h('div', { class: 'aml-bar-group' }, settingsBtn, tipBtn),
             h('div', { class: 'aml-bar-group' }, minusBtn, offsetBtn, plusBtn, toggleBtn)
         );
 
         root.append(viewport, bar);
         document.body.appendChild(root);
-        return { root, viewport, content, settingsBtn, searchBtn, tipBtn, offsetBtn, toggleBtn };
+        return { root, viewport, content, settingsBtn, tipBtn, offsetBtn, toggleBtn };
     }
 
     function applySize() {
@@ -711,7 +718,9 @@
         }, 3000);
     }
 
-    function showMessage(text, withSearch, sub) {
+    // extra: 可选的附加按钮 { text, onClick }
+    function showMessage(text, withSearch, sub, extra) {
+        isInstrumental = false;
         setTip(null);
         currentLyrics = [];
         translations = [];
@@ -720,11 +729,43 @@
         ui.content.replaceChildren(...[
             h('div', { class: 'aml-msg-text', text }),
             sub ? h('div', { class: 'aml-msg-sub', text: sub }) : null,
-            withSearch ? h('button', {
-                class: 'aml-btn', text: '手动搜索',
-                onclick: e => { e.stopPropagation(); openSearch(); }
-            }) : null
+            (withSearch || extra) ? h('div', { class: 'aml-msg-btns' },
+                withSearch ? h('button', {
+                    class: 'aml-btn', text: '手动搜索',
+                    onclick: e => { e.stopPropagation(); openSearch(); }
+                }) : null,
+                extra ? h('button', {
+                    class: 'aml-btn', text: extra.text,
+                    onclick: e => { e.stopPropagation(); extra.onClick(); }
+                }) : null
+            ) : null
         ].filter(Boolean));
+    }
+
+    // 纯音乐：歌词区显示提示，“机翻”按钮的位置显示“纯音乐”
+    function showInstrumental() {
+        currentSongId = null;
+        hasHumanTranslation = false;
+        machineTranslated = false;
+        machinePending = [];
+        lineLangs = [];
+        translatorInfo = null;
+        showMessage('纯音乐请欣赏', false, null,
+            { text: '取消纯音乐标记', onClick: () => markInstrumental(false) });
+        isInstrumental = true;
+        setTip('纯音乐');
+        refreshMenu();
+    }
+
+    // 标记 / 取消标记当前歌曲
+    function markInstrumental(on) {
+        const title = currentSongTitle;
+        if (!title) return;
+        saveInstrumental(title, on);
+        ++loadToken;                 // 使仍在进行的加载 / 翻译失效
+        if (on) showInstrumental();
+        else loadLyricsForTitle(title);
+        refreshMenu();
     }
 
     function renderLyrics() {
@@ -863,6 +904,7 @@
         currentSongId = songId;
         currentLyrics = main;
         translations = alignTranslations(main, trans);
+        isInstrumental = false;
         hasHumanTranslation = translations.some(Boolean);
         machineTranslated = false;
         machinePending = [];
@@ -880,7 +922,7 @@
         try {
             const { main, trans } = await fetchLyrics(songId);
             if (token !== loadToken) return;           // 已经切歌，丢弃
-            if (main.length === 0) { showMessage('暂无歌词', true); return; }
+            if (main.length === 0) { showMessage('暂无歌词', true, null, { text: '标记为纯音乐', onClick: () => markInstrumental(true) }); return; }
             applyLyrics(songId, main, trans);
         } catch (e) {
             if (token !== loadToken) return;
@@ -892,6 +934,7 @@
     async function loadLyricsForTitle(title) {
         const token = ++loadToken;
         currentSongId = null;
+        if (isInstrumentalTitle(title)) { showInstrumental(); return; }
         showMessage(title);
         try {
             const remembered = getMatch(title);
@@ -910,7 +953,7 @@
             }
             const results = await searchSongs(title, 1);
             if (token !== loadToken) return;
-            if (results.length === 0) { showMessage('未找到歌曲', true); return; }
+            if (results.length === 0) { showMessage('未找到歌曲', true, null, { text: '标记为纯音乐', onClick: () => markInstrumental(true) }); return; }
             await loadLyricsById(results[0].id, token);
         } catch (e) {
             if (token !== loadToken) return;
@@ -1005,7 +1048,8 @@
 
     // 还有语言没翻译时，提示按钮可以点击继续（下载语言包）；全部完成则显示“机翻”标签
     function restoreTip() {
-        if (machinePending.length > 0) setTip('下载翻译模型', () => translateCurrent(true));
+        if (isInstrumental) setTip('纯音乐');
+        else if (machinePending.length > 0) setTip('下载翻译模型', () => translateCurrent(true));
         else if (machineTranslated) setTip('机翻');
         else setTip(null);
     }
@@ -1306,7 +1350,6 @@
         el.replaceChildren(
             h('div', { class: 'aml-head', text: '听歌统计（仅统计此浏览器）' }),
             mInfo('本周听歌', fmtDuration(st.week)),
-            mInfo('今日听歌', fmtDuration(st.today)),
             mInfo('本周最常听', st.top || '—', true),
             mAction('清除听歌统计…', () => {
                 if (!confirm('确定要清除所有听歌统计吗？')) return;
@@ -1334,21 +1377,21 @@
             mSep(),
 
             h('div', { class: 'aml-head', text: '歌词匹配' }),
+            mAction('重新搜索歌词…', () => { closePopover(); openSearch(); }),
             mStepper('记住手动匹配的数量', settings.maxMatches === 0 ? '不记住' : String(settings.maxMatches),
                 () => setSetting('maxMatches', stepValue(MATCH_LIMIT_STEPS, settings.maxMatches, -1)),
                 () => setSetting('maxMatches', stepValue(MATCH_LIMIT_STEPS, settings.maxMatches, +1))),
-            mAction('重新搜索歌词…', () => { closePopover(); openSearch(); }),
+            mAction(isInstrumental ? '取消当前歌曲的纯音乐标记' : '标记当前歌曲为纯音乐',
+                () => markInstrumental(!isInstrumental),
+                { disabled: !currentSongTitle }),
+
             mAction('恢复当前歌曲的自动匹配', () => {
                 const title = currentSongTitle;
                 closePopover();
                 removeMatch(title);
                 loadLyricsForTitle(title);
             }, { disabled: !hasCurrentMatch }),
-            mAction('清除全部已记住的匹配…', () => {
-                if (!confirm(`确定要清除已记住的 ${matchCount} 首歌曲匹配吗？`)) return;
-                store.set(KEY_MATCHES, {});
-                refreshMenu();
-            }, { disabled: matchCount === 0, right: `${matchCount} 首` }),
+            mInfo('已手动匹配', `${matchCount} 首`),
             mSep(),
 
             mAction('关于本插件', () => {
@@ -1374,16 +1417,14 @@
     /* ==================================================================
      * 手动搜索面板
      * ================================================================== */
-    function toggleSearch() {
-        if (pop && pop.kind === 'search') closePopover(); else openSearch();
-    }
-
     function openSearch() {
         const title = currentSongTitle;
 
-        openPopover('search', 'aml-search', ui.searchBtn, el => {
+        // 底部栏上已没有单独的“重新搜索”按钮，面板锚定在“设置”按钮下方
+        openPopover('search', 'aml-search', ui.settingsBtn, el => {
             const input = h('input', { class: 'aml-input', type: 'text', placeholder: '输入歌名或歌手，搜索网易云音乐' });
-            input.value = title ? title.split(' - ')[0] : '';
+            // 标题形如「歌名 - 艺人」，搜索框里填「歌名 艺人」
+            input.value = title ? title.replace(/\s+-\s+/, ' ') : '';
             const results = h('div', { class: 'aml-results' });
             const hint = h('div', {
                 class: 'aml-hint',
@@ -1412,6 +1453,7 @@
                         return;
                     }
                     saveMatch(title, song);
+                    saveInstrumental(title, false);   // 选了歌词就不再是纯音乐
                     closePopover();
                     if (title === currentSongTitle) {
                         ++loadToken;   // 使仍在进行的自动加载失效
