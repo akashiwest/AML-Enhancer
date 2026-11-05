@@ -2,6 +2,7 @@
 ## 为网页版 Apple Music 提供歌词翻译，数据来源为网易云音乐。
 在 [greasyfork](https://greasyfork.org/zh-CN/scripts/493948-apple-music-%E6%AD%8C%E8%AF%8D%E5%A2%9E%E5%BC%BA) 安装
 
+篡改猴(Tampermonkey)是一个强大的浏览器拓展程序，本插件需要配合它使用。别担心，安装很简单： [官网]([https://greasyfork.org/zh-CN/scripts/493948-apple-music-%E6%AD%8C%E8%AF%8D%E5%A2%9E%E5%BC%BA](https://www.tampermonkey.net/index.php)) | [Edge 浏览器扩展商店](https://microsoftedge.microsoft.com/addons/detail/iikmkjmpaadaobahmlepeloendndfphd)
 ***
 ### 更新记录
 v1.4
