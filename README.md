@@ -1,9 +1,16 @@
-![示例图片](https://imakashi.com/mono/opensource/github-amlenhancer1.300.webp "View")
+![示例图片](https://imakashi.com/mono/opensource/amle1400.webp "View")
 ## 为网页版 Apple Music 提供歌词翻译，数据来源为网易云音乐。
 在 [greasyfork](https://greasyfork.org/zh-CN/scripts/493948-apple-music-%E6%AD%8C%E8%AF%8D%E5%A2%9E%E5%BC%BA) 安装
 
 ***
 ### 更新记录
+v1.4
+1. 支持在“全屏幕播放器”显示翻译以及补足个别歌曲该界面无原生歌词的情况
+2. 支持备份和还原数据
+3. 一些外观和代码优化
+
+***
+
 v1.3
 1. 支持随设备切换深色模式；
 2. 若歌词匹配错误或未找到歌词，现在可以手动查找并保存选择；
@@ -13,7 +20,7 @@ v1.3
 
 4. 听歌统计与一些设置。
 
-<hr>
+***
 
 v1.2 支持微调并存储每首歌曲的歌词偏移时间
 
